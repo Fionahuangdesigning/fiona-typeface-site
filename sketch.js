@@ -1,6 +1,9 @@
 let font;
 let particles = [];
 
+let effect = 0;
+let totalEffects = 6;
+
 let aboutText =
   "Fiona Huang is a graphic designer and inventor.\n\n" +
   "She uses design to think. Not to decorate. Sometimes the work looks like design. Sometimes it doesn’t. This is intentional.\n\n" +
@@ -20,7 +23,7 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  pixelDensity(0.1);
+  pixelDensity(1);
   makeParticles();
 }
 
@@ -28,11 +31,12 @@ function draw() {
   background(0);
 
   for (let p of particles) {
-    p.react();
-    p.returnHome();
+    p.behave();
     p.update();
     p.show();
   }
+
+  drawEffectName();
 }
 
 function makeParticles() {
@@ -74,10 +78,7 @@ function makeParticles() {
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].trim() === "") continue;
 
-    let x = marginX;
-    let y = startY + i * lineHeight;
-
-    let points = font.textToPoints(lines[i], x, y, fontSize, {
+    let points = font.textToPoints(lines[i], marginX, startY + i * lineHeight, fontSize, {
       sampleFactor: 0.25,
       simplifyThreshold: 0
     });
@@ -93,51 +94,197 @@ class Particle {
     this.home = createVector(x, y);
     this.pos = createVector(x, y);
     this.vel = createVector(0, 0);
+    this.acc = createVector(0, 0);
+
     this.size = random(1.8, 3.5);
+    this.seed = random(1000);
+    this.angle = random(TWO_PI);
   }
 
-  react() {
+  behave() {
+    let homeForce = p5.Vector.sub(this.home, this.pos);
+    homeForce.mult(0.065);
+    this.applyForce(homeForce);
+
+    if (effect === 0) this.mouseRepel();
+    if (effect === 1) this.wave();
+    if (effect === 2) this.orbit();
+    if (effect === 3) this.noiseDrift();
+    if (effect === 4) this.explode();
+    if (effect === 5) this.magnet();
+  }
+
+  mouseRepel() {
     let mouse = createVector(mouseX, mouseY);
     let dir = p5.Vector.sub(this.pos, mouse);
     let d = dir.mag();
-
-    let radius = 105;
+    let radius = 115;
 
     if (d < radius) {
       dir.normalize();
-      let strength = map(d, 0, radius, 7, 0);
+      let strength = map(d, 0, radius, 8, 0);
       dir.mult(strength);
-      this.vel.add(dir);
+      this.applyForce(dir);
     }
   }
 
-  returnHome() {
-    let homeForce = p5.Vector.sub(this.home, this.pos);
-    homeForce.mult(0.06);
-    this.vel.add(homeForce);
+  wave() {
+    let waveX = sin(frameCount * 0.04 + this.home.y * 0.035) * 0.45;
+    let waveY = cos(frameCount * 0.04 + this.home.x * 0.035) * 0.45;
+    this.applyForce(createVector(waveX, waveY));
+    this.mouseRepel();
+  }
+
+  orbit() {
+    let mouse = createVector(mouseX, mouseY);
+    let dir = p5.Vector.sub(this.pos, mouse);
+    let d = dir.mag();
+    let radius = 170;
+
+    if (d < radius) {
+      let tangent = createVector(-dir.y, dir.x);
+      tangent.normalize();
+      tangent.mult(map(d, 0, radius, 2.2, 0));
+      this.applyForce(tangent);
+    }
+  }
+
+  noiseDrift() {
+    let angle = noise(this.seed, frameCount * 0.01) * TWO_PI * 3;
+    let force = p5.Vector.fromAngle(angle);
+    force.mult(0.18);
+    this.applyForce(force);
+  }
+
+  explode() {
+    let mouse = createVector(mouseX, mouseY);
+    let dir = p5.Vector.sub(this.pos, mouse);
+    let d = dir.mag();
+    let radius = 160;
+
+    if (d < radius) {
+      dir.normalize();
+      let strength = map(d, 0, radius, 14, 0);
+      dir.mult(strength);
+      this.applyForce(dir);
+    }
+  }
+
+  magnet() {
+    let mouse = createVector(mouseX, mouseY);
+    let dir = p5.Vector.sub(mouse, this.pos);
+    let d = dir.mag();
+    let radius = 220;
+
+    if (d < radius) {
+      dir.normalize();
+      let strength = map(d, 0, radius, 2.8, 0);
+      dir.mult(strength);
+      this.applyForce(dir);
+    }
+  }
+
+  applyForce(force) {
+    this.acc.add(force);
   }
 
   update() {
-    this.vel.mult(0.85);
+    this.vel.add(this.acc);
+
+    if (effect === 4) {
+      this.vel.mult(0.88);
+    } else {
+      this.vel.mult(0.82);
+    }
+
     this.pos.add(this.vel);
+    this.acc.mult(0);
   }
 
   show() {
     let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
 
-    let w = map(d, 0, 140, 16, this.size, true);
-    let h = map(d, 0, 140, 5, this.size, true);
+    let w = this.size;
+    let h = this.size;
+
+    if (effect === 0) {
+      w = map(d, 0, 140, 16, this.size, true);
+      h = map(d, 0, 140, 5, this.size, true);
+    }
+
+    if (effect === 1) {
+      w = 2 + sin(frameCount * 0.08 + this.seed) * 1.5;
+      h = 8 + cos(frameCount * 0.08 + this.seed) * 4;
+    }
+
+    if (effect === 2) {
+      w = 10;
+      h = 2.5;
+    }
+
+    if (effect === 3) {
+      w = 2.5;
+      h = 2.5;
+    }
+
+    if (effect === 4) {
+      w = map(d, 0, 180, 22, this.size, true);
+      h = map(d, 0, 180, 3, this.size, true);
+    }
+
+    if (effect === 5) {
+      w = map(d, 0, 220, 3, 14, true);
+      h = map(d, 0, 220, 3, 4, true);
+    }
 
     push();
     translate(this.pos.x, this.pos.y);
-    rotate(this.vel.heading());
+
+    if (effect === 1) {
+      rotate(sin(frameCount * 0.04 + this.seed) * PI);
+    } else {
+      rotate(this.vel.heading());
+    }
 
     noStroke();
     fill(255);
-    ellipse(0, 0, w, h);
+
+    if (effect === 3) {
+      rectMode(CENTER);
+      rect(0, 0, w, h);
+    } else {
+      ellipse(0, 0, w, h);
+    }
 
     pop();
   }
+}
+
+function mousePressed() {
+  effect++;
+  if (effect >= totalEffects) {
+    effect = 0;
+  }
+}
+
+function drawEffectName() {
+  let names = [
+    "repel",
+    "wave",
+    "orbit",
+    "noise",
+    "explode",
+    "magnet"
+  ];
+
+  push();
+  fill(255, 120);
+  noStroke();
+  textFont("Arial");
+  textSize(12);
+  textAlign(RIGHT, BOTTOM);
+  text("effect " + (effect + 1) + " / " + totalEffects + " — " + names[effect], width - 22, height - 18);
+  pop();
 }
 
 function windowResized() {
