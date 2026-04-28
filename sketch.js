@@ -8,11 +8,11 @@ let aboutText =
   "Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.\n\n" +
   "Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.";
 
+let lines = [];
 let fontSize;
 let marginX;
 let startY;
 let lineHeight;
-let lines = [];
 
 function preload() {
   font = loadFont("FionaNewTestament.otf");
@@ -39,7 +39,7 @@ function makeParticles() {
   particles = [];
   lines = [];
 
-  fontSize = constrain(width * 0.024, 13, 24);
+  fontSize = constrain(width * 0.023, 12, 23);
   marginX = width * 0.08;
   lineHeight = fontSize * 1.45;
 
@@ -78,7 +78,7 @@ function makeParticles() {
     let y = startY + i * lineHeight;
 
     let points = font.textToPoints(lines[i], x, y, fontSize, {
-      sampleFactor: 0.23,
+      sampleFactor: 0.25,
       simplifyThreshold: 0
     });
 
@@ -93,7 +93,7 @@ class Particle {
     this.home = createVector(x, y);
     this.pos = createVector(x, y);
     this.vel = createVector(0, 0);
-    this.size = random(2, 4);
+    this.size = random(1.8, 3.5);
   }
 
   react() {
@@ -125,8 +125,8 @@ class Particle {
   show() {
     let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
 
-    let w = map(d, 0, 140, 18, this.size, true);
-    let h = map(d, 0, 140, 6, this.size, true);
+    let w = map(d, 0, 140, 16, this.size, true);
+    let h = map(d, 0, 140, 5, this.size, true);
 
     push();
     translate(this.pos.x, this.pos.y);
