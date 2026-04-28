@@ -1,8 +1,18 @@
 let font;
 let particles = [];
 
-let textString = "Fiona New Testament";
-let fontSize = 130;
+let aboutText =
+  "Fiona Huang is a graphic designer and inventor.\n\n" +
+  "She uses design to think. Not to decorate. Sometimes the work looks like design. Sometimes it doesn’t. This is intentional.\n\n" +
+  "She makes books, images, and systems that behave. They might make sound. They might wait. They might do something slightly wrong. This is also intentional.\n\n" +
+  "Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.\n\n" +
+  "Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.";
+
+let fontSize;
+let marginX;
+let startY;
+let lineHeight;
+let lines = [];
 
 function preload() {
   font = loadFont("FionaNewTestament.otf");
@@ -27,20 +37,54 @@ function draw() {
 
 function makeParticles() {
   particles = [];
+  lines = [];
 
-  fontSize = min(width * 0.11, 140);
+  fontSize = constrain(width * 0.024, 13, 24);
+  marginX = width * 0.08;
+  lineHeight = fontSize * 1.45;
 
-  let bounds = font.textBounds(textString, 0, 0, fontSize);
-  let x = width / 2 - bounds.w / 2;
-  let y = height / 2 + bounds.h / 2;
+  textFont(font);
+  textSize(fontSize);
 
-  let points = font.textToPoints(textString, x, y, fontSize, {
-    sampleFactor: 0.18,
-    simplifyThreshold: 0
-  });
+  let maxWidth = width * 0.84;
+  let paragraphs = aboutText.split("\n\n");
 
-  for (let pt of points) {
-    particles.push(new Particle(pt.x, pt.y));
+  for (let para of paragraphs) {
+    let words = para.split(" ");
+    let line = "";
+
+    for (let word of words) {
+      let testLine = line + word + " ";
+
+      if (textWidth(testLine) > maxWidth) {
+        lines.push(line);
+        line = word + " ";
+      } else {
+        line = testLine;
+      }
+    }
+
+    lines.push(line);
+    lines.push("");
+  }
+
+  let totalHeight = lines.length * lineHeight;
+  startY = height / 2 - totalHeight / 2 + fontSize;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === "") continue;
+
+    let x = marginX;
+    let y = startY + i * lineHeight;
+
+    let points = font.textToPoints(lines[i], x, y, fontSize, {
+      sampleFactor: 0.23,
+      simplifyThreshold: 0
+    });
+
+    for (let pt of points) {
+      particles.push(new Particle(pt.x, pt.y));
+    }
   }
 }
 
@@ -49,7 +93,7 @@ class Particle {
     this.home = createVector(x, y);
     this.pos = createVector(x, y);
     this.vel = createVector(0, 0);
-    this.size = random(3, 6);
+    this.size = random(2, 4);
   }
 
   react() {
@@ -57,11 +101,11 @@ class Particle {
     let dir = p5.Vector.sub(this.pos, mouse);
     let d = dir.mag();
 
-    let radius = 120;
+    let radius = 105;
 
     if (d < radius) {
       dir.normalize();
-      let strength = map(d, 0, radius, 8, 0);
+      let strength = map(d, 0, radius, 7, 0);
       dir.mult(strength);
       this.vel.add(dir);
     }
@@ -81,8 +125,8 @@ class Particle {
   show() {
     let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
 
-    let w = map(d, 0, 150, 20, this.size, true);
-    let h = map(d, 0, 150, 7, this.size, true);
+    let w = map(d, 0, 140, 18, this.size, true);
+    let h = map(d, 0, 140, 6, this.size, true);
 
     push();
     translate(this.pos.x, this.pos.y);
