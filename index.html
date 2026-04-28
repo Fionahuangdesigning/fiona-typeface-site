@@ -1,42 +1,82 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fiona New Testament</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiona Huang</title>
 
   <style>
-    html, body {
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
       background: #000;
+      color: #fff;
       overflow: hidden;
-      cursor: crosshair;
-    }
 
-    canvas {
-      display: block;
-    }
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
-    .hint {
-      position: fixed;
-      left: 28px;
-      bottom: 24px;
-      color: white;
       font-family: Arial, sans-serif;
-      font-size: 13px;
-      letter-spacing: 0.04em;
-      opacity: 0.65;
-      pointer-events: none;
+    }
+
+    .container {
+      width: 85%;
+      max-width: 1200px;
+      height: 90vh;
+
+      display: flex;
+      align-items: center;
+    }
+
+    .text {
+      width: 100%;
+      font-size: clamp(18px, 1.8vw, 30px);
+      line-height: 1.5;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin-bottom: 1.2em;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
     }
   </style>
 </head>
-
 <body>
-  <div class="hint">move mouse through the type / click to change mode</div>
-  <script src="sketch.js"></script>
+
+  <div class="container">
+    <div class="text">
+      <p>
+        Fiona Huang is a graphic designer and inventor.
+      </p>
+
+      <p>
+        She uses design to think. Not to decorate. Sometimes the work looks like design. Sometimes it doesn’t. This is intentional.
+      </p>
+
+      <p>
+        She makes books, images, and systems that behave. They might make sound. They might wait. They might do something slightly wrong. This is also intentional.
+      </p>
+
+      <p>
+        Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.
+      </p>
+
+      <p>
+        Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.
+      </p>
+    </div>
+  </div>
+
 </body>
 </html>
