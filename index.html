@@ -1,304 +1,147 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <title>Fiona New Testament</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Fiona Typeface Interaction</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 
   <style>
-    @font-face {
-      font-family: "FionaNewTestament";
-      src: url("Fiona New Testament.otf") format("opentype");
-    }
-
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
       overflow: hidden;
-      background: #fff;
-      color: #000;
-      cursor: crosshair;
-      touch-action: none;
+      background: #f4f1e8;
+      cursor: grab;
     }
 
-    body {
-      font-family: "FionaNewTestament", serif;
+    body:active {
+      cursor: grabbing;
     }
 
     canvas {
       display: block;
-      position: fixed;
-      inset: 0;
-      z-index: 1;
     }
 
-    .title {
-      position: fixed;
-      top: 28px;
-      left: 34px;
-      z-index: 3;
-      font-family: "FionaNewTestament", serif;
-      font-size: clamp(42px, 9vw, 130px);
-      line-height: 0.9;
-      letter-spacing: -0.04em;
-      pointer-events: none;
-      mix-blend-mode: difference;
-      color: white;
-    }
-
-    .subtitle {
-      position: fixed;
-      right: 28px;
-      bottom: 28px;
-      z-index: 3;
-      font-family: Helvetica, Arial, sans-serif;
-      font-size: 12px;
-      line-height: 1.4;
-      text-align: right;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      pointer-events: none;
+    @font-face {
+      font-family: "FionaNewTestament";
+      src: url("Fiona New Testament.otf");
     }
 
     .hint {
       position: fixed;
+      bottom: 24px;
       left: 28px;
-      bottom: 28px;
-      z-index: 4;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-family: Helvetica, Arial, sans-serif;
-      font-size: 12px;
-      background: rgba(255,255,255,0.85);
-      border: 1px solid rgba(0,0,0,0.18);
-      border-radius: 999px;
-      padding: 8px 12px;
-      backdrop-filter: blur(8px);
-    }
-
-    button {
-      border: 1px solid #000;
-      background: #fff;
-      border-radius: 999px;
-      padding: 2px 8px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    button:hover {
-      background: #000;
-      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      color: #111;
+      z-index: 10;
+      mix-blend-mode: difference;
+      color: white;
     }
   </style>
 </head>
 
 <body>
-  <div class="title">Fiona<br>New<br>Testament</div>
+  <div class="hint">DRAG / MOVE / CLICK</div>
 
-  <div class="hint">
-    <span>Drag to see words</span>
-    <button id="minusBtn">−</button>
-    <button id="plusBtn">+</button>
-    <span id="sizeReadout">48px</span>
-  </div>
+<script>
+let font;
+let phrases = [
+  "FIONA",
+  "NEW TESTAMENT",
+  "TYPE THAT MOVES",
+  "DRAG TO READ",
+  "EVERYTHING YOU WANT",
+  "WANTS ME ALREADY"
+];
 
-  <div class="subtitle">
-    SPACE = new sentence<br>
-    C = clear screen<br>
-    + / − = type size
-  </div>
+let currentPhrase = 0;
 
-  <script>
-    const LINES = [
-      "Fiona New Testament is not a font. It is a voice pretending to be a font.",
-      "Drag slowly and the sentence appears like it has been waiting for you.",
-      "The letter is not decoration. The letter is behavior.",
-      "This typeface writes back when you touch it.",
-      "Every stroke is a small confession.",
-      "The website does not show the words until your hand asks for them.",
-      "Reading becomes drawing. Drawing becomes reading.",
-      "This is Fiona New Testament. It does not sit still."
-    ];
+let xOffset = 0;
+let targetXOffset = 0;
+let waveAmount = 0;
+let targetWaveAmount = 0;
 
-    let font;
-    let phrase = "";
-    let charIndex = 0;
-    let brushSize = 48;
-    let glyphs = [];
+let stretch = 1;
+let targetStretch = 1;
 
-    let isDragging = false;
-    let px = 0;
-    let py = 0;
-    let carry = 0;
+let bgColors = ["#f4f1e8", "#111111", "#ff4f00", "#c6ff00", "#8fd3ff"];
+let textColors = ["#111111", "#f4f1e8", "#111111", "#111111", "#111111"];
+let colorIndex = 0;
 
-    const TTL_MS = 1800;
+function preload() {
+  font = loadFont("Fiona New Testament.otf");
+}
 
-    function preload() {
-      font = loadFont("Fiona New Testament.otf");
-    }
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  textFont(font);
+  textAlign(CENTER, CENTER);
+}
 
-    function setup() {
-      createCanvas(windowWidth, windowHeight);
-      textFont(font);
-      textAlign(LEFT, CENTER);
-      noStroke();
-      background(255);
-      newSentence();
-      attachUI();
-      updateSize();
-    }
+function draw() {
+  background(bgColors[colorIndex]);
 
-    function draw() {
-      background(255);
+  xOffset = lerp(xOffset, targetXOffset, 0.08);
+  waveAmount = lerp(waveAmount, targetWaveAmount, 0.08);
+  stretch = lerp(stretch, targetStretch, 0.08);
 
-      let now = millis();
+  let phrase = phrases[currentPhrase];
 
-      for (let i = glyphs.length - 1; i >= 0; i--) {
-        let g = glyphs[i];
-        let age = now - g.born;
+  let size = min(width * 0.16, 160);
+  textSize(size);
 
-        if (age > TTL_MS) {
-          glyphs.splice(i, 1);
-        } else {
-          let t = age / TTL_MS;
-          let alpha = map(t, 0, 1, 255, 0);
-          let drift = t * -18;
+  fill(textColors[colorIndex]);
+  noStroke();
 
-          push();
-          translate(g.x, g.y + drift);
-          rotate(g.angle);
-          fill(0, alpha);
-          textFont(font);
-          textSize(g.size);
-          text(g.ch, 0, 0);
-          pop();
-        }
-      }
-    }
+  let spacing = size * 0.72;
+  let totalWidth = phrase.length * spacing;
 
-    function mousePressed() {
-      isDragging = true;
-      px = mouseX;
-      py = mouseY;
-      carry = 0;
-      newSentence();
-    }
+  push();
+  translate(width / 2 + xOffset, height / 2);
 
-    function mouseDragged() {
-      if (!isDragging) return;
-      placeCharsAlongSegment(px, py, mouseX, mouseY);
-      px = mouseX;
-      py = mouseY;
-    }
+  for (let i = 0; i < phrase.length; i++) {
+    let char = phrase[i];
 
-    function mouseReleased() {
-      isDragging = false;
-    }
+    let x = i * spacing - totalWidth / 2;
+    let y = sin(frameCount * 0.04 + i * 0.7) * waveAmount;
 
-    function touchStarted() {
-      mousePressed();
-      return false;
-    }
+    let scaleY = stretch + sin(frameCount * 0.03 + i) * 0.12;
+    let rotateAmount = sin(frameCount * 0.025 + i) * map(waveAmount, 0, 80, 0, 0.18);
 
-    function touchMoved() {
-      mouseDragged();
-      return false;
-    }
+    push();
+    translate(x, y);
+    rotate(rotateAmount);
+    scale(1, scaleY);
+    text(char, 0, 0);
+    pop();
+  }
 
-    function touchEnded() {
-      mouseReleased();
-      return false;
-    }
+  pop();
 
-    function placeCharsAlongSegment(x1, y1, x2, y2) {
-      let dx = x2 - x1;
-      let dy = y2 - y1;
-      let segLen = dist(x1, y1, x2, y2);
+  targetWaveAmount = map(mouseY, 0, height, 90, 0);
+  targetStretch = map(mouseX, 0, width, 0.55, 1.9);
+}
 
-      if (segLen === 0) return;
+function mouseDragged() {
+  targetXOffset += movedX * 1.8;
+}
 
-      let angle = atan2(dy, dx);
-      let s = carry;
+function mouseMoved() {
+  targetXOffset = map(mouseX, 0, width, -80, 80);
+}
 
-      textFont(font);
-      textSize(brushSize);
+function mousePressed() {
+  currentPhrase = (currentPhrase + 1) % phrases.length;
+  colorIndex = (colorIndex + 1) % bgColors.length;
+  targetWaveAmount = random(20, 100);
+  targetStretch = random(0.6, 1.8);
+}
 
-      while (s < segLen) {
-        let ch = phrase.charAt(charIndex);
-        let t = s / segLen;
-
-        let x = lerp(x1, x2, t);
-        let y = lerp(y1, y2, t);
-
-        glyphs.push({
-          x: x,
-          y: y,
-          angle: angle,
-          ch: ch,
-          size: brushSize,
-          born: millis()
-        });
-
-        let advance = max(4, textWidth(ch));
-        s += advance;
-
-        charIndex = (charIndex + 1) % phrase.length;
-      }
-
-      carry = s - segLen;
-    }
-
-    function newSentence() {
-      let line = random(LINES);
-      phrase = " " + line + " ";
-      charIndex = 0;
-    }
-
-    function keyPressed() {
-      if (key === " ") {
-        newSentence();
-      }
-
-      if (key === "c" || key === "C") {
-        glyphs = [];
-        background(255);
-      }
-
-      if (key === "+" || key === "=") {
-        brushSize = min(180, brushSize + 4);
-        updateSize();
-      }
-
-      if (key === "-" || key === "_") {
-        brushSize = max(12, brushSize - 4);
-        updateSize();
-      }
-    }
-
-    function attachUI() {
-      document.getElementById("plusBtn").onclick = function () {
-        brushSize = min(180, brushSize + 4);
-        updateSize();
-      };
-
-      document.getElementById("minusBtn").onclick = function () {
-        brushSize = max(12, brushSize - 4);
-        updateSize();
-      };
-    }
-
-    function updateSize() {
-      document.getElementById("sizeReadout").innerText = brushSize + "px";
-    }
-
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-    }
-  </script>
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
 </body>
 </html>
