@@ -8,11 +8,12 @@ let aboutText =
   "Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.\n\n" +
   "Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.";
 
+let lines = [];
 let fontSize;
 let marginX;
 let startY;
 let lineHeight;
-let interactionRadius = 110;
+let interactionRadius = 95;
 
 function preload() {
   font = loadFont("FionaNewTestament.otf");
@@ -21,69 +22,76 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
-  generateParticles();
+  generateLayout();
 }
 
 function draw() {
   background(0);
 
+  drawReadableText();
+
+  // black circle hides normal text only under the mouse
+  noStroke();
+  fill(0);
+  circle(mouseX, mouseY, interactionRadius * 2.1);
+
   for (let p of particles) {
     p.behaviors();
     p.update();
-    p.show();
+
+    if (p.isNearMouse()) {
+      p.show();
+    }
   }
 }
 
-function generateParticles() {
+function generateLayout() {
   particles = [];
+  lines = [];
 
-  fontSize = min(width * 0.028, height * 0.035);
-  fontSize = constrain(fontSize, 13, 28);
+  fontSize = min(width * 0.027, height * 0.034);
+  fontSize = constrain(fontSize, 14, 27);
 
   marginX = width * 0.08;
-  startY = height * 0.12;
   lineHeight = fontSize * 1.45;
 
   let maxWidth = width * 0.84;
-  let words = aboutText.split(" ");
-  let lines = [];
-  let currentLine = "";
+  let paragraphs = aboutText.split("\n\n");
 
   textFont(font);
   textSize(fontSize);
 
-  for (let word of words) {
-    let testLine = currentLine + word + " ";
+  for (let paragraph of paragraphs) {
+    let words = paragraph.split(" ");
+    let currentLine = "";
 
-    if (word.includes("\n\n")) {
-      let parts = word.split("\n\n");
-      currentLine += parts[0];
-      lines.push(currentLine);
-      lines.push("");
-      currentLine = parts[1] + " ";
-    } else if (textWidth(testLine) > maxWidth) {
-      lines.push(currentLine);
-      currentLine = word + " ";
-    } else {
-      currentLine = testLine;
+    for (let word of words) {
+      let testLine = currentLine + word + " ";
+
+      if (textWidth(testLine) > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word + " ";
+      } else {
+        currentLine = testLine;
+      }
     }
-  }
 
-  lines.push(currentLine);
+    lines.push(currentLine);
+    lines.push("");
+  }
 
   let totalHeight = lines.length * lineHeight;
   startY = height / 2 - totalHeight / 2 + fontSize;
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
-
     if (line.trim() === "") continue;
 
     let x = marginX;
     let y = startY + i * lineHeight;
 
     let points = font.textToPoints(line, x, y, fontSize, {
-      sampleFactor: 0.19,
+      sampleFactor: 0.22,
       simplifyThreshold: 0
     });
 
@@ -93,21 +101,39 @@ function generateParticles() {
   }
 }
 
+function drawReadableText() {
+  fill(255);
+  noStroke();
+  textFont(font);
+  textSize(fontSize);
+  textAlign(LEFT, BASELINE);
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() !== "") {
+      text(lines[i], marginX, startY + i * lineHeight);
+    }
+  }
+}
+
 class Particle {
   constructor(x, y) {
     this.home = createVector(x, y);
-    this.pos = createVector(x + random(-10, 10), y + random(-10, 10));
+    this.pos = createVector(x, y);
     this.vel = createVector(0, 0);
     this.acc = createVector(0, 0);
-    this.size = random(2.2, 4.5);
+    this.size = random(2.2, 4.2);
+  }
+
+  isNearMouse() {
+    return dist(mouseX, mouseY, this.home.x, this.home.y) < interactionRadius * 1.2;
   }
 
   behaviors() {
     let arrive = this.arrive(this.home);
     let mouseForce = this.reactToMouse();
 
-    arrive.mult(1.1);
-    mouseForce.mult(2.0);
+    arrive.mult(1.2);
+    mouseForce.mult(2.1);
 
     this.applyForce(arrive);
     this.applyForce(mouseForce);
@@ -117,17 +143,15 @@ class Particle {
     let desired = p5.Vector.sub(target, this.pos);
     let d = desired.mag();
 
-    let speed = 7;
-
-    if (d < 90) {
-      speed = map(d, 0, 90, 0, 7);
+    let speed = 6;
+    if (d < 80) {
+      speed = map(d, 0, 80, 0, 6);
     }
 
     desired.setMag(speed);
 
     let steer = p5.Vector.sub(desired, this.vel);
-    steer.limit(0.6);
-
+    steer.limit(0.55);
     return steer;
   }
 
@@ -139,12 +163,11 @@ class Particle {
     if (d < interactionRadius) {
       desired.normalize();
 
-      let strength = map(d, 0, interactionRadius, 10, 0);
+      let strength = map(d, 0, interactionRadius, 9, 0);
       desired.mult(strength);
 
       let steer = p5.Vector.sub(desired, this.vel);
-      steer.limit(1.5);
-
+      steer.limit(1.4);
       return steer;
     }
 
@@ -182,5 +205,5 @@ class Particle {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  generateParticles();
+  generateLayout();
 }
