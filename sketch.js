@@ -79,7 +79,7 @@ function makeParticles() {
     if (lines[i].trim() === "") continue;
 
     let points = font.textToPoints(lines[i], marginX, startY + i * lineHeight, fontSize, {
-      sampleFactor: 0.25,
+      sampleFactor: 0.55, //here 
       simplifyThreshold: 0
     });
 
@@ -96,7 +96,7 @@ class Particle {
     this.vel = createVector(0, 0);
     this.acc = createVector(0, 0);
 
-    this.size = random(1.8, 3.5);
+    this.size = random(1.2, 2.2);
     this.seed = random(1000);
     this.angle = random(TWO_PI);
   }
