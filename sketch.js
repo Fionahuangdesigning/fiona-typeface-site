@@ -1,11 +1,18 @@
 let font;
 let particles = [];
 
-let displayText = "FIONA\nNEW\nTESTAMENT";
-let fontSize;
-let mode = 0;
+let aboutText =
+  "Fiona Huang is a graphic designer and inventor.\n\n" +
+  "She uses design to think. Not to decorate. Sometimes the work looks like design. Sometimes it doesn’t. This is intentional.\n\n" +
+  "She makes books, images, and systems that behave. They might make sound. They might wait. They might do something slightly wrong. This is also intentional.\n\n" +
+  "Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.\n\n" +
+  "Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.";
 
-let interactionRadius = 150;
+let fontSize;
+let marginX;
+let startY;
+let lineHeight;
+let interactionRadius = 110;
 
 function preload() {
   font = loadFont("FionaNewTestament.otf");
@@ -14,8 +21,7 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
-  textFont(font);
-  generateTextParticles();
+  generateParticles();
 }
 
 function draw() {
@@ -26,30 +32,58 @@ function draw() {
     p.update();
     p.show();
   }
-
-  drawModeLabel();
 }
 
-function generateTextParticles() {
+function generateParticles() {
   particles = [];
 
-  fontSize = min(width * 0.14, 150);
+  fontSize = min(width * 0.028, height * 0.035);
+  fontSize = constrain(fontSize, 13, 28);
 
-  let lines = displayText.split("\n");
-  let lineHeight = fontSize * 0.9;
+  marginX = width * 0.08;
+  startY = height * 0.12;
+  lineHeight = fontSize * 1.45;
+
+  let maxWidth = width * 0.84;
+  let words = aboutText.split(" ");
+  let lines = [];
+  let currentLine = "";
+
+  textFont(font);
+  textSize(fontSize);
+
+  for (let word of words) {
+    let testLine = currentLine + word + " ";
+
+    if (word.includes("\n\n")) {
+      let parts = word.split("\n\n");
+      currentLine += parts[0];
+      lines.push(currentLine);
+      lines.push("");
+      currentLine = parts[1] + " ";
+    } else if (textWidth(testLine) > maxWidth) {
+      lines.push(currentLine);
+      currentLine = word + " ";
+    } else {
+      currentLine = testLine;
+    }
+  }
+
+  lines.push(currentLine);
 
   let totalHeight = lines.length * lineHeight;
-  let startY = height / 2 - totalHeight / 2 + fontSize * 0.75;
+  startY = height / 2 - totalHeight / 2 + fontSize;
 
-  for (let j = 0; j < lines.length; j++) {
-    let line = lines[j];
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
 
-    let bounds = font.textBounds(line, 0, 0, fontSize);
-    let x = width / 2 - bounds.w / 2;
-    let y = startY + j * lineHeight;
+    if (line.trim() === "") continue;
+
+    let x = marginX;
+    let y = startY + i * lineHeight;
 
     let points = font.textToPoints(line, x, y, fontSize, {
-      sampleFactor: 0.16,
+      sampleFactor: 0.19,
       simplifyThreshold: 0
     });
 
@@ -62,88 +96,59 @@ function generateTextParticles() {
 class Particle {
   constructor(x, y) {
     this.home = createVector(x, y);
-    this.pos = createVector(x + random(-20, 20), y + random(-20, 20));
+    this.pos = createVector(x + random(-10, 10), y + random(-10, 10));
     this.vel = createVector(0, 0);
     this.acc = createVector(0, 0);
-
-    this.size = random(3, 7);
-    this.noiseOffset = random(1000);
-    this.colorOffset = random(255);
+    this.size = random(2.2, 4.5);
   }
 
   behaviors() {
-    let mouse = createVector(mouseX, mouseY);
-
     let arrive = this.arrive(this.home);
-    let react = this.react(mouse);
+    let mouseForce = this.reactToMouse();
 
-    arrive.mult(1.0);
-    react.mult(1.7);
+    arrive.mult(1.1);
+    mouseForce.mult(2.0);
 
     this.applyForce(arrive);
-    this.applyForce(react);
-
-    if (mode === 1) {
-      this.applyForce(this.wander());
-    }
-
-    if (mode === 2) {
-      this.applyForce(this.wave());
-    }
+    this.applyForce(mouseForce);
   }
 
   arrive(target) {
     let desired = p5.Vector.sub(target, this.pos);
     let d = desired.mag();
 
-    let speed = 8;
+    let speed = 7;
 
-    if (d < 100) {
-      speed = map(d, 0, 100, 0, 8);
+    if (d < 90) {
+      speed = map(d, 0, 90, 0, 7);
     }
 
     desired.setMag(speed);
 
     let steer = p5.Vector.sub(desired, this.vel);
-    steer.limit(0.7);
+    steer.limit(0.6);
 
     return steer;
   }
 
-  react(mouse) {
+  reactToMouse() {
+    let mouse = createVector(mouseX, mouseY);
     let desired = p5.Vector.sub(this.pos, mouse);
     let d = desired.mag();
 
     if (d < interactionRadius) {
       desired.normalize();
 
-      let strength = map(d, 0, interactionRadius, 12, 0);
+      let strength = map(d, 0, interactionRadius, 10, 0);
       desired.mult(strength);
 
       let steer = p5.Vector.sub(desired, this.vel);
-      steer.limit(1.8);
+      steer.limit(1.5);
 
       return steer;
     }
 
     return createVector(0, 0);
-  }
-
-  wander() {
-    let angle = noise(this.noiseOffset + frameCount * 0.01) * TWO_PI * 2;
-    let force = p5.Vector.fromAngle(angle);
-    force.mult(0.08);
-    return force;
-  }
-
-  wave() {
-    let force = createVector(
-      sin(frameCount * 0.04 + this.home.y * 0.02),
-      cos(frameCount * 0.04 + this.home.x * 0.02)
-    );
-
-    force.mult(0.12);
-    return force;
   }
 
   applyForce(force) {
@@ -152,7 +157,7 @@ class Particle {
 
   update() {
     this.vel.add(this.acc);
-    this.vel.mult(0.82);
+    this.vel.mult(0.84);
     this.pos.add(this.vel);
     this.acc.mult(0);
   }
@@ -160,59 +165,22 @@ class Particle {
   show() {
     let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
 
-    let w = map(d, 0, interactionRadius, 26, this.size, true);
-    let h = map(d, 0, interactionRadius, 8, this.size, true);
+    let w = map(d, 0, interactionRadius, 18, this.size, true);
+    let h = map(d, 0, interactionRadius, 6, this.size, true);
 
     push();
     translate(this.pos.x, this.pos.y);
-
-    let angle = atan2(this.vel.y, this.vel.x);
-    rotate(angle);
+    rotate(atan2(this.vel.y, this.vel.x));
 
     noStroke();
-
-    if (mode === 0) {
-      fill(255);
-    } else if (mode === 1) {
-      fill(
-        180 + sin(frameCount * 0.03 + this.colorOffset) * 75,
-        120 + sin(frameCount * 0.02 + this.colorOffset) * 80,
-        255
-      );
-    } else {
-      fill(255);
-    }
-
+    fill(255);
     ellipse(0, 0, w, h);
 
     pop();
   }
 }
 
-function mousePressed() {
-  mode++;
-  if (mode > 2) {
-    mode = 0;
-  }
-}
-
-function drawModeLabel() {
-  push();
-  fill(255, 120);
-  noStroke();
-  textFont("Arial");
-  textSize(12);
-  textAlign(RIGHT, BOTTOM);
-
-  let label = "mode: oval distortion";
-  if (mode === 1) label = "mode: color scatter";
-  if (mode === 2) label = "mode: wave field";
-
-  text(label, width - 28, height - 24);
-  pop();
-}
-
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  generateTextParticles();
+  generateParticles();
 }
