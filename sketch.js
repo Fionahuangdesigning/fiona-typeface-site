@@ -20,7 +20,7 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  pixelDensity(1);
+  pixelDensity(0.1);
   makeParticles();
 }
 
