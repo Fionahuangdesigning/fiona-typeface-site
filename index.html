@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fiona Huang</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 
   <style>
     * {
@@ -12,71 +14,21 @@
       box-sizing: border-box;
     }
 
-    body {
-      width: 100vw;
-      height: 100vh;
-      background: #000;
-      color: #fff;
-      overflow: hidden;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
-      width: 85%;
-      max-width: 1200px;
-      height: 90vh;
-
-      display: flex;
-      align-items: center;
-    }
-
-    .text {
+    html, body {
       width: 100%;
-      font-size: clamp(18px, 1.8vw, 30px);
-      line-height: 1.5;
-      font-weight: 400;
-      letter-spacing: -0.01em;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      cursor: crosshair;
     }
 
-    p {
-      margin-bottom: 1.2em;
-    }
-
-    p:last-child {
-      margin-bottom: 0;
+    canvas {
+      display: block;
     }
   </style>
 </head>
+
 <body>
-
-  <div class="container">
-    <div class="text">
-      <p>
-        Fiona Huang is a graphic designer and inventor.
-      </p>
-
-      <p>
-        She uses design to think. Not to decorate. Sometimes the work looks like design. Sometimes it doesn’t. This is intentional.
-      </p>
-
-      <p>
-        She makes books, images, and systems that behave. They might make sound. They might wait. They might do something slightly wrong. This is also intentional.
-      </p>
-
-      <p>
-        Recently, she has been working with emotions, hate, attachment, and self-regard, treating them as material. Not to solve them. Just to organize them.
-      </p>
-
-      <p>
-        Her work is playful. Her life is, too. She loves animals, traveling, Edward Hopper, and Salvador Dalí. She hates idiots. Every day she wakes up and feels an exquisite joy—the joy of being Fiona. It shows in the work.
-      </p>
-    </div>
-  </div>
-
+  <script src="sketch.js"></script>
 </body>
 </html>
